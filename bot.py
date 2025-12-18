@@ -1,6 +1,9 @@
 import asyncio
 import logging
 import random
+
+from aiogram.webhook.aiohttp_server import SimpleRequestHandler, setup_application
+from aiohttp import web
 from aiogram import Bot, Dispatcher, types, F
 from aiogram.filters import CommandStart, Command
 from openai import AsyncOpenAI
@@ -410,10 +413,65 @@ async def main():
         scheduler.start()
         logger.info(f"✅ Планувальник запущено. Нагадування кожні {config.REMINDER_INTERVAL_HOURS} год.")
 
-        # Видаляємо старі апдейти
-        await bot.delete_webhook(drop_pending_updates=True)
-        # Запускаємо polling
-        await dp.start_polling(bot)
+        # ----------Для локального використання бота--------------
+        # # Видаляємо старі апдейти
+        # await bot.delete_webhook(drop_pending_updates=True)
+        # # Запускаємо polling
+        # await dp.start_polling(bot)
+
+        # ----------Для використання бота на Render-----------------
+
+        # Перевіряємо чи є WEBHOOK_URL
+        if config.WEBHOOK_URL:
+            # WEBHOOK режим (для Render)
+            logger.info("Запуск у WEBHOOK режимі")
+
+            # Встановлюємо webhook
+            webhook_path = f"/webhook/{config.TELEGRAM_TOKEN}"
+            webhook_url = f"{config.WEBHOOK_URL}{webhook_path}"
+
+            await bot.set_webhook(
+                url=webhook_url,
+                drop_pending_updates=True
+            )
+            logger.info(f"Webhook встановлено: {webhook_url}")
+
+            # Створюємо web додаток
+            app = web.Application()
+
+            # Health check endpoint (щоб Render бачив що сервіс живий)
+            async def health_check(request):
+                return web.json_response({"status": "ok", "bot": "running"})
+
+            app.router.add_get("/", health_check)
+            app.router.add_get("/health", health_check)
+
+            # Налаштовуємо webhook handler
+            webhook_requests_handler = SimpleRequestHandler(
+                dispatcher=dp,
+                bot=bot,
+            )
+            webhook_requests_handler.register(app, path=webhook_path)
+            setup_application(app, dp, bot=bot)
+
+            # Запускаємо web сервер
+            runner = web.AppRunner(app)
+            await runner.setup()
+            site = web.TCPSite(runner, host="0.0.0.0", port=config.PORT)
+            await site.start()
+
+            logger.info(f"Web сервер запущено на порті {config.PORT}")
+            logger.info("Бот працює у webhook режимі. Для зупинки натисніть Ctrl+C")
+
+            # Тримаємо сервер живим
+            await asyncio.Event().wait()
+
+        else:
+            # POLLING режим (для локальної розробки)
+            logger.info("Запуск у POLLING режимі (локальна розробка)")
+            await bot.delete_webhook(drop_pending_updates=True)
+            await dp.start_polling(bot)
+
     except Exception as e:
         logger.error(f"Помилка при запуску бота: {e}")
     finally:

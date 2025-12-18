@@ -12,6 +12,12 @@ OPENAI_API_KEY = os.getenv('OPENAI_API_KEY')
 # PostgreSQL Database URL
 DATABASE_URL = os.getenv("DATABASE_URL")
 
+# Webhook налаштування (для Render)
+# Якщо WEBHOOK_URL не встановлено - бот працює в polling режимі (локально)
+# Якщо встановлено - бот працює в webhook режимі (на Render)
+WEBHOOK_URL = os.getenv('WEBHOOK_URL')
+PORT = int(os.getenv('PORT', 10000))
+
 # Налаштування OpenAI
 OPENAI_MODEL = "gpt-4o-mini"
 SYSTEM_PROMPT = """
