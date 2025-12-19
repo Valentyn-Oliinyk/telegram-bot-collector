@@ -43,8 +43,8 @@ MIN_MESSAGE_TOKENS = 10 # Мінімальна кількість токенів
 EXCLUDED_COMMANDS = ['/start', '/help', '/stats', '/stop', '/reminders', '/quality', '/export']
 
 # Налаштування нагадувань
-REMINDER_INTERVAL_HOURS = 0.03  # Інтервал нагадувань (години)
-INACTIVITY_THRESHOLD_MINUTES = 2  # Нагадування тільки якщо користувач неактивний хв
+REMINDER_INTERVAL_HOURS = 1  # Інтервал нагадувань (години)
+INACTIVITY_THRESHOLD_MINUTES = 30  # Нагадування тільки якщо користувач неактивний хв
 REMINDER_MESSAGES =[
     "👋 Cześć! Jak leci? Podziel się czymś ciekawym ze swojego dnia!",
     "💭 Co teraz masz na myśli? Opowiedz mi o tym!",
