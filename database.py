@@ -85,10 +85,10 @@ class Database:
         """Простий аналіз настрою (можна покращити пізніше)"""
         text_lower = text.lower()
 
-        positive_words = ['добре', 'чудово', 'супер', 'класно', 'відмінно',
-                         'люблю', 'радію', 'щасливий', '😊', '😄', '❤️', '👍']
-        negative_words = ['погано', 'жахливо', 'сумно', 'боляче', 'не подобається',
-                         'ненавиджу', 'сумую', '😢', '😞', '😠', '💔']
+        positive_words = ['dobrze', 'świetnie', 'super', 'klasowo', 'doskonale',
+                         'kocham', 'cieszę się', 'szczęśliwy', '😊', '😄', '❤️', '👍']
+        negative_words = ['źle', 'okropnie', 'smutno', 'boli', 'nie podoba mi się',
+                         'nienawidzę', 'tęsknię', '😢', '😞', '😠', '💔']
 
         positive_count = sum(1 for word in positive_words if word in text_lower)
         negative_count = sum(1 for word in negative_words if word in text_lower)
@@ -246,10 +246,6 @@ class Database:
                 WHERE user_id = $1
             ''', user_id)
 
- # "AND (
- #                    last_activity_at IS NULL
- #                    OR last_activity_at < NOW() - INTERVAL '{config.INACTIVITY_THRESHOLD_MINUTES} minutes'
- #                )"
 
     async def get_users_for_reminders(self):
         """Отримати список користувачів для нагадувань"""
@@ -258,7 +254,10 @@ class Database:
                 SELECT user_id FROM user_stats 
                 WHERE reminders_enabled = TRUE 
                 AND collection_active = TRUE
-            
+                AND (
+                last_activity_at IS NULL
+                OR last_activity_at < NOW() - INTERVAL '{config.INACTIVITY_THRESHOLD_MINUTES} minutes'
+              )
             ''')
             return [user['user_id'] for user in users]
 
